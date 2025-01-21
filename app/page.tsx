@@ -129,35 +129,13 @@ export default function Home() {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.play();
       }
       setCameraOpen(true);
-    } catch (error) {
-      toast({
-        title: "Camera Error",
-        description: "Unable to access camera",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const startCameraAndCapturePhoto = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
-          capturePhoto();
-        };
-      }
     } catch (error) {
       toast({
         title: "Camera Error",
@@ -176,9 +154,7 @@ export default function Home() {
       canvas.toBlob((blob) => {
         if (blob) {
           //@ts-ignore
-          const file = new File([blob], "camera-photo.jpg", {
-            type: "image/jpeg",
-          });
+          const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
           validateAndSetFiles([file]);
         }
       }, "image/jpeg");
@@ -311,15 +287,15 @@ export default function Home() {
                   multiple
                   className="hidden"
                 />
-                {hasCamera && (
-                  <Button
-                    onClick={() => startCameraAndCapturePhoto()}
-                    variant="outline"
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    Camera
-                  </Button>
-                )}
+                 {hasCamera && (
+              <Button
+                onClick={() => startCamera()}
+                variant="outline"
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                Camera
+              </Button>
+            )}
               </div>
             </div>
 
