@@ -48,6 +48,13 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
+
+  // toast({
+  //   title: "Example Title",
+  //   description: "Example description",
+  //   variant: "info", // Ensure the variant is valid
+  // });
+
   useEffect(() => {
     // Check if the device has a camera
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
@@ -116,6 +123,16 @@ export default function Home() {
       });
     }
 
+    // Check if adding these files would exceed the limit
+    if (files.length + validFiles.length > 2) {
+      toast({
+        title: "File Limit Exceeded",
+        description: "You can only upload a maximum of two files",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newFiles: FileWithPreview[] = validFiles.map((file) => ({
       file,
       type: file.type.startsWith("image/") ? "image" : "pdf",
@@ -129,7 +146,9 @@ export default function Home() {
 
   const startCamera = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
@@ -137,6 +156,7 @@ export default function Home() {
       }
       setCameraOpen(true);
     } catch (error) {
+      console.error("Error accessing camera:", error);
       toast({
         title: "Camera Error",
         description: "Unable to access camera",
@@ -150,14 +170,25 @@ export default function Home() {
       const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      canvas.getContext("2d")?.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob((blob) => {
-        if (blob) {
-          //@ts-ignore
-          const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
-          validateAndSetFiles([file]);
-        }
-      }, "image/jpeg");
+      const context = canvas.getContext("2d");
+
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            //@ts-ignore
+            const file = new File([blob], "camera-photo.jpg", {
+              type: "image/jpeg",
+            });
+            const preview = URL.createObjectURL(file);
+            setFiles((prevFiles) => [
+              ...prevFiles,
+              { file, preview, type: "image" },
+            ]);
+          }
+        }, "image/jpeg");
+      }
+
       stopCamera();
     }
   };
@@ -287,15 +318,12 @@ export default function Home() {
                   multiple
                   className="hidden"
                 />
-                 {hasCamera && (
-              <Button
-                onClick={() => startCamera()}
-                variant="outline"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Camera
-              </Button>
-            )}
+                {hasCamera && (
+                  <Button onClick={() => startCamera()} variant="outline">
+                    <Camera className="w-4 h-4 mr-2" />
+                    Camera
+                  </Button>
+                )}
               </div>
             </div>
 
