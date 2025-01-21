@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useDropzone } from 'react-dropzone';
 import {
   Camera,
   Upload,
@@ -93,41 +94,6 @@ export default function DocumentUploader({ title }: { title: string }) {
     }
   }, []);
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    validateAndSetFiles(droppedFiles);
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
-    validateAndSetFiles(selectedFiles);
-    // Reset input value to allow selecting the same file again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
   const validateAndSetFiles = (selectedFiles: File[]) => {
     console.log(selectedFiles, "selectedFiles");
     
@@ -179,6 +145,19 @@ export default function DocumentUploader({ title }: { title: string }) {
         return '';
     }
   };
+
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    validateAndSetFiles(acceptedFiles);
+  }, []);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/*': ['.jpg', '.jpeg', '.png', '.heic', '.heif'],
+    },
+    multiple: true,
+  });
 
   const startCamera = async () => {
     try {
@@ -366,9 +345,10 @@ export default function DocumentUploader({ title }: { title: string }) {
       </div>
     );
   };
+
   return (
     <div className="bg-background p-8 relative">
-         <LoadingOverlay isLoading={loading} />
+      <LoadingOverlay isLoading={loading} />
       <div className="max-w-2xl mx-auto space-y-8">
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -382,17 +362,14 @@ export default function DocumentUploader({ title }: { title: string }) {
 
           <div className="space-y-6">
             <div
-              ref={dropZoneRef}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
+              {...getRootProps()}
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragging
+                isDragActive
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/50"
               }`}
             >
+              <input {...getInputProps()} />
               <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
               <div className="space-y-2">
                 <p className="text-lg font-medium">
@@ -401,29 +378,6 @@ export default function DocumentUploader({ title }: { title: string }) {
                 <p className="text-sm text-muted-foreground">
                   or click to select files
                 </p>
-              </div>
-              <div className="mt-4 flex gap-4 justify-center">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Select Files
-                </Button>
-                <Input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.HEIC,.heif"
-                  onChange={handleFileChange}
-                  multiple
-                  className="hidden"
-                />
-                {/* {hasCamera && (
-                  <Button onClick={() => startCamera()} variant="outline">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Camera
-                  </Button>
-                )} */}
               </div>
             </div>
 
@@ -502,7 +456,6 @@ export default function DocumentUploader({ title }: { title: string }) {
                 )}
 
                 <div className="space-y-4">
-                  {/* <h2 className="text-lg font-semibold">Upload Options</h2> */}
                   <div className="flex flex-col gap-3">
                     {title === "Vehicle Registration" && (
                       <Button
