@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { useDropzone } from 'react-dropzone';
+import { useDropzone } from "react-dropzone";
 import {
   Camera,
   Upload,
@@ -75,17 +75,20 @@ export default function DocumentUploader({ title }: { title: string }) {
 
   console.log(title);
 
-
-
   const validateAndSetFiles = (selectedFiles: File[]) => {
     console.log(selectedFiles, "selectedFiles");
-    
+    toast({
+      title: "File Limit Exceeded",
+      description: "You can only upload a maximum of two files",
+      variant: "destructive",
+    });
+
     const validTypes = ["application/pdf", "image/heic", "image/heif"];
     const validFiles = selectedFiles.filter((file) => {
       const fileType = file.type || getFileExtensionType(file.name);
       return validTypes.includes(fileType) || fileType.startsWith("image/");
     });
-  
+
     if (validFiles.length !== selectedFiles.length) {
       toast({
         title: "Invalid file type",
@@ -93,7 +96,7 @@ export default function DocumentUploader({ title }: { title: string }) {
         variant: "destructive",
       });
     }
-  
+
     // Check if adding these files would exceed the limit
     if (files.length + validFiles.length > 2) {
       toast({
@@ -103,7 +106,7 @@ export default function DocumentUploader({ title }: { title: string }) {
       });
       return;
     }
-  
+
     const newFiles: FileWithPreview[] = validFiles.map((file) => ({
       file,
       type: file.type.startsWith("image/") ? "image" : "pdf",
@@ -111,37 +114,79 @@ export default function DocumentUploader({ title }: { title: string }) {
         ? URL.createObjectURL(file)
         : undefined,
     }));
-  
+
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
   };
 
   const getFileExtensionType = (fileName: string): string => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+    const extension = fileName.split(".").pop()?.toLowerCase();
     switch (extension) {
-      case 'heic':
-      case 'heif':
-        return 'image/heic';
-      case 'pdf':
-        return 'application/pdf';
+      case "heic":
+      case "heif":
+        return "image/heic";
+      case "pdf":
+        return "application/pdf";
       // Add more cases as needed
       default:
-        return '';
+        return "";
     }
   };
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    validateAndSetFiles(acceptedFiles);
-  }, []);
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+    onDrop: (acceptedFiles, fileRejections) => {
+      // Validate and set files
+      const validFiles = acceptedFiles.filter((file) => {
+        const fileType = file.type || getFileExtensionType(file.name);
+        return (
+          ["application/pdf", "image/heic", "image/heif"].includes(fileType) ||
+          fileType.startsWith("image/")
+        );
+      });
+
+      if (files.length + validFiles.length > 2) {
+        toast({
+          title: "File Limit Exceeded",
+          description: "You can only upload a maximum of two files.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Add valid files
+      const newFiles = validFiles.map((file) => ({
+        file,
+        type: file.type.startsWith("image/") ? "image" : "pdf",
+        preview: file.type.startsWith("image/")
+          ? URL.createObjectURL(file)
+          : undefined,
+      }));
+
+      //@ts-ignore
+      setFiles((prev) => [...prev, ...newFiles]);
+
+      // Handle rejected files
+      fileRejections.forEach((rejection) => {
+        rejection.errors.forEach((error) => {
+          toast({
+            title: "File Rejected",
+            description: `${rejection.file.name}: ${error.message}`,
+            variant: "destructive",
+          });
+        });
+      });
+    },
     accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpg', '.jpeg', '.png', '.heic', '.heif'],
+      "image/*": [],
+      "application/pdf": [],
     },
     multiple: true,
+    maxSize: 10 * 1024 * 1024, // 10 MB limit
+    onDragEnter: () => setIsDragging(true),
+    onDragLeave: () => setIsDragging(false),
+    onDragOver: () => setIsDragging(true),
+    onDropAccepted: () => setIsDragging(false),
+    onDropRejected: () => setIsDragging(false),
   });
-
 
   const uploadToEndpoint = async (endpoint: string) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -242,7 +287,7 @@ export default function DocumentUploader({ title }: { title: string }) {
               className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
             >
               <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm text-muted-foreground mb-1">
                     {key.replace(/_/g, " ")}
                   </h3>
@@ -306,7 +351,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                   or click to select files
                 </p>
                 <Button
-                   onClick={() => fileInputRef.current?.click()}
+                  onClick={() => fileInputRef.current?.click()}
                   variant="outline"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -447,8 +492,6 @@ export default function DocumentUploader({ title }: { title: string }) {
             </Tabs>
           </Card>
         )}
-
-
       </div>
     </div>
   );
