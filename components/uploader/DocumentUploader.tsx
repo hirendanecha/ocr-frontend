@@ -319,12 +319,12 @@ export default function DocumentUploader({ title }: { title: string }) {
               className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
             >
               <div className="flex justify-between items-start">
-                <div>
+              <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-sm text-muted-foreground mb-1">
                     {key.replace(/_/g, " ")}
                   </h3>
                   <p
-                    className="text-lg font-semibold"
+                    className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap"
                     dir={language === "Arabic" ? "rtl" : "ltr"}
                   >
                     {text}
