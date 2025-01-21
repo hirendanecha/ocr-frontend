@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Camera, Upload, Car, CreditCard, FileText, Plus, X, File } from "lucide-react";
+import React, { useState, useRef, useCallback } from "react";
+import { Camera, Upload, Car, CreditCard, FileText, Plus, X, File, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,9 +31,37 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    validateAndSetFiles(droppedFiles);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -90,7 +118,8 @@ export default function Home() {
       canvas.getContext('2d')?.drawImage(videoRef.current, 0, 0);
       canvas.toBlob((blob) => {
         if (blob) {
-          const file = new window.File([blob], "camera-photo.jpg", { type: "image/jpeg" });
+          //@ts-ignore
+          const file = new File([blob], "camera-photo.jpg", { type: "image/jpeg" });
           validateAndSetFiles([file]);
         }
       }, 'image/jpeg');
@@ -163,6 +192,13 @@ export default function Home() {
     setFiles([]);
   };
 
+  const openPdfInNewTab = (file: File) => {
+    const fileUrl = URL.createObjectURL(file);
+    window.open(fileUrl, '_blank');
+    // Clean up the URL after the window is opened
+    URL.revokeObjectURL(fileUrl);
+  };
+
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-2xl mx-auto space-y-8">
@@ -181,30 +217,49 @@ export default function Home() {
           </div>
           
           <div className="space-y-6">
-            <div className="flex gap-4">
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                variant="outline"
-                className="flex-1"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Files
-              </Button>
-              <Input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                multiple
-                className="hidden"
-              />
-              <Button
-                onClick={() => startCamera()}
-                variant="outline"
-              >
-                <Camera className="w-4 h-4 mr-2" />
-                Camera
-              </Button>
+            <div
+              ref={dropZoneRef}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                isDragging 
+                  ? 'border-primary bg-primary/5' 
+                  : 'border-border hover:border-primary/50'
+              }`}
+            >
+              <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
+              <div className="space-y-2">
+                <p className="text-lg font-medium">Drag and drop your files here</p>
+                <p className="text-sm text-muted-foreground">
+                  or click to select files
+                </p>
+              </div>
+              <div className="mt-4 flex gap-4 justify-center">
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Select Files
+                </Button>
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileChange}
+                  multiple
+                  className="hidden"
+                />
+                <Button
+                  onClick={() => startCamera()}
+                  variant="outline"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Camera
+                </Button>
+              </div>
             </div>
 
             {files.length > 0 && (
@@ -241,7 +296,7 @@ export default function Home() {
                 {files.some(f => f.type === 'pdf') && (
                   <div className="space-y-4">
                     <h2 className="text-lg font-semibold">PDF Documents</h2>
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                       {files.map((file, index) => (
                         file.type === 'pdf' && (
                           <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg group">
@@ -249,14 +304,24 @@ export default function Home() {
                               <File className="w-4 h-4" />
                               <span className="text-sm">{file.file.name}</span>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => removeFile(index)}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => openPdfInNewTab(file.file)}
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => removeFile(index)}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         )
                       ))}
