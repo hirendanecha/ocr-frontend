@@ -401,12 +401,12 @@ export default function DocumentUploader({ title }: { title: string }) {
                   multiple
                   className="hidden"
                 />
-                {hasCamera && (
+                {/* {hasCamera && (
                   <Button onClick={() => startCamera()} variant="outline">
                     <Camera className="w-4 h-4 mr-2" />
                     Camera
                   </Button>
-                )}
+                )} */}
               </div>
             </div>
 
