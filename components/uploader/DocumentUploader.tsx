@@ -25,6 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import LoadingOverlay from "../Loader/LoadingOverlay";
 
 type FileWithPreview = {
   file: File;
@@ -349,7 +350,8 @@ export default function DocumentUploader({ title }: { title: string }) {
     );
   };
   return (
-    <div className="bg-background p-8 ">
+    <div className="bg-background p-8 relative">
+         <LoadingOverlay isLoading={loading} />
       <div className="max-w-2xl mx-auto space-y-8">
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
