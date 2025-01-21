@@ -129,7 +129,7 @@ export default function DocumentUploader({ title }: { title: string }) {
   };
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-    const validTypes = ["application/pdf", "image/jpeg", "image/png"];
+    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/heic"];
     const validFiles = selectedFiles.filter((file) =>
       validTypes.includes(file.type)
     );
@@ -396,7 +396,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                 <Input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".pdf,.jpg,.jpeg,.png,.HEIC"
                   onChange={handleFileChange}
                   multiple
                   className="hidden"
