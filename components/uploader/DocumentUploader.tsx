@@ -378,6 +378,13 @@ export default function DocumentUploader({ title }: { title: string }) {
                 <p className="text-sm text-muted-foreground">
                   or click to select files
                 </p>
+                <Button
+                   onClick={() => fileInputRef.current?.click()}
+                  variant="outline"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Select Files
+                </Button>
               </div>
             </div>
 
