@@ -129,19 +129,19 @@ export default function DocumentUploader({ title }: { title: string }) {
   };
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-    const validTypes = ["application/pdf", "image/jpeg", "image/png", "image/heic"];
+    const validTypes = ["application/pdf"];
     const validFiles = selectedFiles.filter((file) =>
-      validTypes.includes(file.type)
+      validTypes.includes(file.type) || file.type.startsWith("image/")
     );
-
+  
     if (validFiles.length !== selectedFiles.length) {
       toast({
         title: "Invalid file type",
-        description: "Please upload only PDF, JPG, or PNG files",
+        description: "Please upload only PDF or image files",
         variant: "destructive",
       });
     }
-
+  
     // Check if adding these files would exceed the limit
     if (files.length + validFiles.length > 2) {
       toast({
@@ -151,7 +151,7 @@ export default function DocumentUploader({ title }: { title: string }) {
       });
       return;
     }
-
+  
     const newFiles: FileWithPreview[] = validFiles.map((file) => ({
       file,
       type: file.type.startsWith("image/") ? "image" : "pdf",
@@ -159,7 +159,7 @@ export default function DocumentUploader({ title }: { title: string }) {
         ? URL.createObjectURL(file)
         : undefined,
     }));
-
+  
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
   };
 
