@@ -51,12 +51,15 @@ export default function Home() {
   useEffect(() => {
     // Check if the device has a camera
     if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      navigator.mediaDevices.enumerateDevices()
-        .then(devices => {
-          const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
+      navigator.mediaDevices
+        .enumerateDevices()
+        .then((devices) => {
+          const videoInputDevices = devices.filter(
+            (device) => device.kind === "videoinput"
+          );
           setHasCamera(videoInputDevices.length > 0);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error("Error checking for camera devices:", error);
         });
     } else {
@@ -134,6 +137,27 @@ export default function Home() {
         videoRef.current.srcObject = mediaStream;
       }
       setCameraOpen(true);
+    } catch (error) {
+      toast({
+        title: "Camera Error",
+        description: "Unable to access camera",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startCameraAndCapturePhoto = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          capturePhoto();
+        };
+      }
     } catch (error) {
       toast({
         title: "Camera Error",
@@ -288,7 +312,10 @@ export default function Home() {
                   className="hidden"
                 />
                 {hasCamera && (
-                  <Button onClick={() => startCamera()} variant="outline">
+                  <Button
+                    onClick={() => startCameraAndCapturePhoto()}
+                    variant="outline"
+                  >
                     <Camera className="w-4 h-4 mr-2" />
                     Camera
                   </Button>
