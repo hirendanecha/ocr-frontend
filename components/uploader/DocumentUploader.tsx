@@ -75,24 +75,7 @@ export default function DocumentUploader({ title }: { title: string }) {
 
   console.log(title);
 
-  useEffect(() => {
-    // Check if the device has a camera
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      navigator.mediaDevices
-        .enumerateDevices()
-        .then((devices) => {
-          const videoInputDevices = devices.filter(
-            (device) => device.kind === "videoinput"
-          );
-          setHasCamera(videoInputDevices.length > 0);
-        })
-        .catch((error) => {
-          console.error("Error checking for camera devices:", error);
-        });
-    } else {
-      console.warn("MediaDevices API not supported.");
-    }
-  }, []);
+
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
     console.log(selectedFiles, "selectedFiles");
@@ -159,62 +142,6 @@ export default function DocumentUploader({ title }: { title: string }) {
     multiple: true,
   });
 
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
-      }
-      setCameraOpen(true);
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      toast({
-        title: "Camera Error",
-        description: "Unable to access camera",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current) {
-      const canvas = document.createElement("canvas");
-      canvas.width = videoRef.current.videoWidth;
-      canvas.height = videoRef.current.videoHeight;
-      const context = canvas.getContext("2d");
-
-      if (context) {
-        context.drawImage(videoRef.current, 0, 0);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            //@ts-ignore
-            const file = new File([blob], "camera-photo.jpg", {
-              type: "image/jpeg",
-            });
-            const preview = URL.createObjectURL(file);
-            setFiles((prevFiles) => [
-              ...prevFiles,
-              { file, preview, type: "image" },
-            ]);
-          }
-        }, "image/jpeg");
-      }
-
-      stopCamera();
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-    }
-    setCameraOpen(false);
-  };
 
   const uploadToEndpoint = async (endpoint: string) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -521,27 +448,7 @@ export default function DocumentUploader({ title }: { title: string }) {
           </Card>
         )}
 
-        <Dialog open={cameraOpen} onOpenChange={setCameraOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Take Photo</DialogTitle>
-            </DialogHeader>
-            <div className="mt-4">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full rounded-lg"
-              />
-              <div className="mt-4 flex justify-end gap-4">
-                <Button variant="outline" onClick={stopCamera}>
-                  Cancel
-                </Button>
-                <Button onClick={capturePhoto}>Capture</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+
       </div>
     </div>
   );
