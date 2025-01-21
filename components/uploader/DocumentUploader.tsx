@@ -129,10 +129,13 @@ export default function DocumentUploader({ title }: { title: string }) {
   };
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-    const validTypes = ["application/pdf"];
-    const validFiles = selectedFiles.filter((file) =>
-      validTypes.includes(file.type) || file.type.startsWith("image/")
-    );
+    console.log(selectedFiles, "selectedFiles");
+    
+    const validTypes = ["application/pdf", "image/heic", "image/heif"];
+    const validFiles = selectedFiles.filter((file) => {
+      const fileType = file.type || getFileExtensionType(file.name);
+      return validTypes.includes(fileType) || fileType.startsWith("image/");
+    });
   
     if (validFiles.length !== selectedFiles.length) {
       toast({
@@ -161,6 +164,20 @@ export default function DocumentUploader({ title }: { title: string }) {
     }));
   
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+  };
+
+  const getFileExtensionType = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'heic':
+      case 'heif':
+        return 'image/heic';
+      case 'pdf':
+        return 'application/pdf';
+      // Add more cases as needed
+      default:
+        return '';
+    }
   };
 
   const startCamera = async () => {
@@ -396,7 +413,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                 <Input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.HEIC"
+                  accept=".pdf,.jpg,.jpeg,.png,.HEIC,.heif"
                   onChange={handleFileChange}
                   multiple
                   className="hidden"
