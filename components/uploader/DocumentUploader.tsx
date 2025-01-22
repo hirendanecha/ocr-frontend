@@ -270,16 +270,16 @@ export default function DocumentUploader({ title }: { title: string }) {
     });
   };
 
-  const renderResponseSection = (
+ const renderResponseSection = (
     data: Record<string, { English: string; Arabic: string }>,
     language: "English" | "Arabic"
   ) => {
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(data).map(([key, value]) => {
-          const text = value[language];
+          const text = value[language] || "--";
           // Skip rendering if the text is empty
-          if (!text) return null;
+          //if (!text) return null;
 
           return (
             <div
@@ -317,6 +317,7 @@ export default function DocumentUploader({ title }: { title: string }) {
       </div>
     );
   };
+
 
   return (
     <div className="bg-background p-8 relative">
