@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 const routes = [
-  { name: "Car Card", path: "/" },
+  { name: "Car Registration Card", path: "/" },
   { name: "Driving Card", path: "/driving" },
-  { name: "Emirates Card", path: "/emirates" },
+  { name: "Emirates ID", path: "/emirates" },
 ];
 
 export default function Navbar() {
