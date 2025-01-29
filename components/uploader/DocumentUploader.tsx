@@ -270,7 +270,7 @@ export default function DocumentUploader({ title }: { title: string }) {
     });
   };
 
- const renderResponseSection = (
+  const renderResponseSection = (
     data: Record<string, { English: string; Arabic: string }>,
     language: "English" | "Arabic"
   ) => {
@@ -336,11 +336,10 @@ export default function DocumentUploader({ title }: { title: string }) {
           <div className="space-y-6">
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragActive
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragActive
                   ? "border-primary bg-primary/5"
                   : "border-border hover:border-primary/50"
-              }`}
+                }`}
             >
               <input {...getInputProps()} />
               <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
@@ -464,6 +463,16 @@ export default function DocumentUploader({ title }: { title: string }) {
                         className="w-full"
                       >
                         <FileText className="w-4 h-4 mr-2" />
+                        Scan
+                      </Button>
+                    )}
+                    {title === "new-car-detect" && (
+                      <Button
+                        onClick={() => uploadToEndpoint("/carllmclaude")}
+                        disabled={loading}
+                        className="w-full"
+                      >
+                        <Car className="w-4 h-4 mr-2" />
                         Scan
                       </Button>
                     )}

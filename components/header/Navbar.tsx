@@ -9,6 +9,7 @@ const routes = [
   { name: "Car Registration Card", path: "/" },
   { name: "Driving Card", path: "/driving" },
   { name: "Emirates ID", path: "/emirates" },
+  { name: "New Car Detect", path: "/new-car-detect", badge: true }, // Added new route with badge
 ];
 
 export default function Navbar() {
@@ -32,13 +33,17 @@ export default function Navbar() {
               <Link
                 key={route.path}
                 href={route.path}
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  pathname === route.path
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname === route.path
                     ? "border-indigo-500 text-gray-900"
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-                } transition-colors duration-200 ease-in-out`}
+                  } transition-colors duration-200 ease-in-out`}
               >
                 {route.name}
+                {route.badge && ( // Render badge if route has badge prop
+                  <span className="ml-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                    claude 3.5 Sonnet
+                  </span>
+                )}
               </Link>
             ))}
           </div>
@@ -65,14 +70,18 @@ export default function Navbar() {
             <Link
               key={route.path}
               href={route.path}
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                pathname === route.path
+              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${pathname === route.path
                   ? "bg-indigo-50 border-indigo-500 text-indigo-700"
                   : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"
-              } transition-colors duration-200 ease-in-out`}
+                } transition-colors duration-200 ease-in-out`}
               onClick={() => setIsOpen(false)}
             >
               {route.name}
+              {route.badge && ( // Render badge if route has badge prop
+                <span className="ml-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                  claude 3.5 Sonnet
+                </span>
+              )}
             </Link>
           ))}
         </div>
