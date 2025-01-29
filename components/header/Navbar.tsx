@@ -79,7 +79,7 @@ export default function Navbar() {
               {route.name}
               {route.badge && ( // Render badge if route has badge prop
                 <span className="ml-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs">
-                  claude 3.5 Sonnet
+                  New
                 </span>
               )}
             </Link>
