@@ -271,53 +271,68 @@ export default function DocumentUploader({ title }: { title: string }) {
   };
 
   const renderResponseSection = (
-    data: Record<string, { English: string; Arabic: string }>,
+    data: Record<string, { English: string; Arabic: string } | number>,
     language: "English" | "Arabic"
   ) => {
+    //console.log(data, "dddd");
+
     return (
       <div className="grid gap-4 md:grid-cols-2">
         {Object.entries(data).map(([key, value]) => {
-          const text = value[language] || "--";
-          // Skip rendering if the text is empty
-          //if (!text) return null;
-
-          return (
-            <div
-              key={key}
-              className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm text-muted-foreground mb-1">
-                    {key.replace(/_/g, " ")}
-                  </h3>
-                  <p
-                    className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap"
-                    dir={language === "Arabic" ? "rtl" : "ltr"}
-                  >
-                    {text}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => copyToClipboard(text, `${key}-${language}`)}
-                  className="h-8 w-8"
-                >
-                  {copiedField === `${key}-${language}` ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
-                </Button>
+          // Handle the "confidence" key separately
+          if (key === "confidence" && typeof value === "number") {
+            return (
+              <div key={key} className="p-4 bg-muted rounded-lg">
+                <h3 className="font-medium text-sm text-muted-foreground mb-1">
+                  Confidence
+                </h3>
+                <p className="text-lg font-semibold">{value}</p>
               </div>
-            </div>
-          );
+            );
+          }
+
+          // Handle translation fields
+          if (typeof value === "object" && value !== null) {
+            const text = value[language] || "--";
+            return (
+              <div
+                key={key}
+                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">
+                      {key.replace(/_/g, " ")}
+                    </h3>
+                    <p
+                      className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap"
+                      dir={language === "Arabic" ? "rtl" : "ltr"}
+                    >
+                      {text}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(text, `${key}-${language}`)}
+                    className="h-8 w-8"
+                  >
+                    {copiedField === `${key}-${language}` ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            );
+          }
+
+          return null; // Return null for any unexpected data types
         })}
       </div>
     );
   };
-
 
   return (
     <div className="bg-background p-8 relative">
@@ -337,8 +352,8 @@ export default function DocumentUploader({ title }: { title: string }) {
             <div
               {...getRootProps()}
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragActive
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
                 }`}
             >
               <input {...getInputProps()} />
