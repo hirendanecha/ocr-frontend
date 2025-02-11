@@ -73,7 +73,7 @@ export default function DocumentUploader({ title }: { title: string }) {
   const [apiResponse, setApiResponse] = useState<ApiResponseData | null>(null);
   const [copiedField, setCopiedField] = useState<string>("");
 
-  //console.log(title);
+  console.log(title);
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
     console.log(selectedFiles, "selectedFiles");
@@ -132,66 +132,9 @@ export default function DocumentUploader({ title }: { title: string }) {
     }
   };
 
-  //console.log(apiResponse);
-  
-  // const { getRootProps, getInputProps, isDragActive } = useDropzone({
-  //   onDrop: (acceptedFiles, fileRejections) => {
-  //     // Validate and set files
-  //     const validFiles = acceptedFiles.filter((file) => {
-  //       const fileType = file.type || getFileExtensionType(file.name);
-  //       return (
-  //         ["application/pdf", "image/heic", "image/heif"].includes(fileType) ||
-  //         fileType.startsWith("image/")
-  //       );
-  //     });
-
-  //     if (files.length + validFiles.length > 2) {
-  //       toast({
-  //         title: "File Limit Exceeded",
-  //         description: "You can only upload a maximum of two files.",
-  //         variant: "destructive",
-  //       });
-  //       return;
-  //     }
-
-  //     // Add valid files
-  //     const newFiles = validFiles.map((file) => ({
-  //       file,
-  //       type: file.type.startsWith("image/") ? "image" : "pdf",
-  //       preview: file.type.startsWith("image/")
-  //         ? URL.createObjectURL(file)
-  //         : undefined,
-  //     }));
-
-  //     //@ts-ignore
-  //     setFiles((prev) => [...prev, ...newFiles]);
-
-  //     // Handle rejected files
-  //     fileRejections.forEach((rejection) => {
-  //       rejection.errors.forEach((error) => {
-  //         toast({
-  //           title: "File Rejected",
-  //           description: `${rejection.file.name}: ${error.message}`,
-  //           variant: "destructive",
-  //         });
-  //       });
-  //     });
-  //   },
-  //   accept: {
-  //     "image/*": [],
-  //     "application/pdf": [],
-  //   },
-  //   multiple: true,
-  //   maxSize: 10 * 1024 * 1024, // 10 MB limit
-  //   onDragEnter: () => setIsDragging(true),
-  //   onDragLeave: () => setIsDragging(false),
-  //   onDragOver: () => setIsDragging(true),
-  //   onDropAccepted: () => setIsDragging(false),
-  //   onDropRejected: () => setIsDragging(false),
-  // });
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: async (acceptedFiles, fileRejections) => {
+    onDrop: (acceptedFiles, fileRejections) => {
+      // Validate and set files
       const validFiles = acceptedFiles.filter((file) => {
         const fileType = file.type || getFileExtensionType(file.name);
         return (
@@ -209,6 +152,7 @@ export default function DocumentUploader({ title }: { title: string }) {
         return;
       }
 
+      // Add valid files
       const newFiles = validFiles.map((file) => ({
         file,
         type: file.type.startsWith("image/") ? "image" : "pdf",
@@ -216,9 +160,11 @@ export default function DocumentUploader({ title }: { title: string }) {
           ? URL.createObjectURL(file)
           : undefined,
       }));
+
       //@ts-ignore
       setFiles((prev) => [...prev, ...newFiles]);
 
+      // Handle rejected files
       fileRejections.forEach((rejection) => {
         rejection.errors.forEach((error) => {
           toast({
@@ -228,52 +174,6 @@ export default function DocumentUploader({ title }: { title: string }) {
           });
         });
       });
-
-      let endpoint = "";
-      if (title === "Vehicle Registration") {
-        endpoint = "/car-detection";
-      } else if (title === "Emirates Card") {
-        endpoint = "/EmiratesIDCard-detection";
-      } else if (title === "Driving Licence") {
-        endpoint = "/driving-detection";
-      }
-
-      if (endpoint) {
-
-        const formData = new FormData();
-        [...files, ...newFiles].forEach((fileObj) => {
-          formData.append('files', fileObj.file);
-        });
-
-
-        try {
-          const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
-          const response = await fetch(`${baseURL}${endpoint}`, {
-            method: "POST",
-            headers: {
-              accept: "application/json",
-            },
-            body: formData,
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            toast({
-              title: "Upload Successful",
-              description: "File uploaded successfully.",
-            });
-            setApiResponse(data);
-          } else {
-            throw new Error(data.error || "Upload failed");
-          }
-        } catch (error) {
-          toast({
-            title: "Upload Failed",
-            description: `${error}`,
-            variant: "destructive",
-          });
-        }
-      }
     },
     accept: {
       "image/*": [],
@@ -295,8 +195,8 @@ export default function DocumentUploader({ title }: { title: string }) {
     setLoading(true);
     try {
       const formData = new FormData();
-      console.log("i am file:-", files);
-
+      console.log("i am file:-",files);
+      
       files.forEach((fileObj, index) => {
         formData.append(`files`, fileObj.file); // Ensure the key matches the expected parameter in FastAPI
       });
@@ -372,18 +272,14 @@ export default function DocumentUploader({ title }: { title: string }) {
     });
   };
 
+ 
   const renderResponseSection = (
-    data: Record<string, { English: string; Arabic: string } | number>,
+    data: Record<string, { English: string; Arabic: string } | string | number>,
     language: "English" | "Arabic"
   ) => {
-    //console.log(data, "dddd");
-    if (!data) {
-      return null; // Or any other placeholder content
-    }
-
     return (
       <div className="grid gap-4 md:grid-cols-2">
-        {Object?.entries(data)?.map(([key, value]) => {
+        {Object.entries(data).map(([key, value]) => {
           // Handle the "confidence" key separately
           if (key === "confidence" && typeof value === "number") {
             return (
@@ -396,7 +292,7 @@ export default function DocumentUploader({ title }: { title: string }) {
             );
           }
 
-          // Handle translation fields
+          // Handle translation fields and other string data
           if (typeof value === "object" && value !== null) {
             const text = value[language] || "--";
             return (
@@ -431,6 +327,34 @@ export default function DocumentUploader({ title }: { title: string }) {
                 </div>
               </div>
             );
+          } else if (typeof value === "string") {
+            return (
+              <div
+                key={key}
+                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm text-muted-foreground mb-1">
+                      {key.replace(/_/g, " ")}
+                    </h3>
+                    <p className="text-lg font-semibold">{value}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => copyToClipboard(value, `${key}`)}
+                    className="h-8 w-8"
+                  >
+                    {copiedField === `${key}` ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            );
           }
 
           return null; // Return null for any unexpected data types
@@ -456,11 +380,10 @@ export default function DocumentUploader({ title }: { title: string }) {
           <div className="space-y-6">
             <div
               {...getRootProps()}
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragActive
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${isDragActive
+                ? "border-primary bg-primary/5"
+                : "border-border hover:border-primary/50"
+                }`}
             >
               <input {...getInputProps()} />
               <Upload className="w-10 h-10 mx-auto mb-4 text-muted-foreground" />
@@ -557,9 +480,9 @@ export default function DocumentUploader({ title }: { title: string }) {
 
                 <div className="space-y-4">
                   <div className="flex flex-col gap-3">
-                    {title === "Vehicle Registration" && (
+                    {title === "new-car" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/car")}
+                        onClick={() => uploadToEndpoint("/carNew")}
                         disabled={loading}
                         className="w-full"
                       >
@@ -567,9 +490,9 @@ export default function DocumentUploader({ title }: { title: string }) {
                         Scan
                       </Button>
                     )}
-                    {title === "Emirates Card" && (
+                    {title === "Emirates Card New" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/EmiratesIDCard")}
+                        onClick={() => uploadToEndpoint("/EmiratesIDCardNew")}
                         disabled={loading}
                         className="w-full"
                       >
@@ -577,9 +500,9 @@ export default function DocumentUploader({ title }: { title: string }) {
                         Scan
                       </Button>
                     )}
-                    {title === "Driving Licence" && (
+                    {title === "Driving Licence New" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/driving")}
+                        onClick={() => uploadToEndpoint("/drivingNew")}
                         disabled={loading}
                         className="w-full"
                       >
@@ -603,7 +526,7 @@ export default function DocumentUploader({ title }: { title: string }) {
             )}
           </div>
         </Card>
-        {apiResponse?.gpt_data && (
+        {apiResponse && (
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-6">Document Data</h2>
             <Tabs defaultValue="english" className="w-full">
@@ -613,12 +536,12 @@ export default function DocumentUploader({ title }: { title: string }) {
               </TabsList>
               <TabsContent value="english" className="mt-6">
                 {renderResponseSection(
-                  apiResponse?.gpt_data?.combined,
+                  apiResponse.gpt_data.combined,
                   "English"
                 )}
               </TabsContent>
               <TabsContent value="arabic" className="mt-6">
-                {renderResponseSection(apiResponse?.gpt_data?.combined, "Arabic")}
+                {renderResponseSection(apiResponse.gpt_data.combined, "Arabic")}
               </TabsContent>
             </Tabs>
           </Card>
