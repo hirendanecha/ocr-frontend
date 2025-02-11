@@ -72,6 +72,8 @@ export default function DocumentUploader({ title }: { title: string }) {
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const [apiResponse, setApiResponse] = useState<ApiResponseData | null>(null);
   const [copiedField, setCopiedField] = useState<string>("");
+  const [textData, setTextData] = useState<Record<string, string> | null>(null); // New state for storing data.text
+
 
   //console.log(title);
 
@@ -257,12 +259,15 @@ export default function DocumentUploader({ title }: { title: string }) {
           });
 
           const data = await response.json();
+          console.log(data);
+          
           if (response.ok) {
             toast({
               title: "Upload Successful",
               description: "File uploaded successfully.",
             });
             setApiResponse(data);
+            setTextData(data.text);
           } else {
             throw new Error(data.error || "Upload failed");
           }
@@ -288,23 +293,27 @@ export default function DocumentUploader({ title }: { title: string }) {
     onDropRejected: () => setIsDragging(false),
   });
 
-  const uploadToEndpoint = async (endpoint: string) => {
+  const uploadToEndpoint = async (endpoint: string,textData:any) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
     console.log(baseURL);
 
     setLoading(true);
     try {
-      const formData = new FormData();
-      console.log("i am file:-", files);
+      // const formData = new FormData();
+      // console.log("i am file:-", files);
 
-      files.forEach((fileObj, index) => {
-        formData.append(`files`, fileObj.file); // Ensure the key matches the expected parameter in FastAPI
-      });
+      // files.forEach((fileObj, index) => {
+      //   formData.append(`files`, fileObj.file); // Ensure the key matches the expected parameter in FastAPI
+      // });
 
       const response = await fetch(`${baseURL}${endpoint}`, {
         method: "POST",
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json', // Ensure the content type is set to JSON
+        },
+        body: JSON.stringify(textData), // Use textData in the request body
       });
+
 
       const data = await response.json();
 
@@ -559,7 +568,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                   <div className="flex flex-col gap-3">
                     {title === "Vehicle Registration" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/car")}
+                        onClick={() => uploadToEndpoint("/carllm",textData)}
                         disabled={loading}
                         className="w-full"
                       >
@@ -569,7 +578,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                     )}
                     {title === "Emirates Card" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/EmiratesIDCard")}
+                        onClick={() => uploadToEndpoint("/EmiratesIDCardllm",textData)}
                         disabled={loading}
                         className="w-full"
                       >
@@ -579,7 +588,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                     )}
                     {title === "Driving Licence" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/driving")}
+                        onClick={() => uploadToEndpoint("/drivingllm",textData)}
                         disabled={loading}
                         className="w-full"
                       >
@@ -589,7 +598,7 @@ export default function DocumentUploader({ title }: { title: string }) {
                     )}
                     {title === "new-car-detect" && (
                       <Button
-                        onClick={() => uploadToEndpoint("/carllmclaude")}
+                        onClick={() => uploadToEndpoint("/carllmclaude",textData)}
                         disabled={loading}
                         className="w-full"
                       >
