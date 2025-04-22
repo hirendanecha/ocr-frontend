@@ -42,21 +42,15 @@ type ApiResponse = {
 };
 
 type ApiResponseData = {
-  text: Record<string, string>;
-  gpt_data: {
-    combined: Record<
-      string,
-      {
-        English: string;
-        Arabic: string;
-        Translation_Status: string;
-      }
-    >;
+  verification: {
+    isAuthentic: boolean;
+    confidenceLevel: string;
+    reasoning: string;
+    identifiedElements: string[];
+    fontConsistency: boolean;
+    concerns: string[];
   };
-  side_detection: {
-    front: boolean;
-    back: boolean;
-  };
+  extractedData: Record<string, { english: string; arabic: string }>;
 };
 
 export default function DocumentUploader({ title }: { title: string }) {
@@ -70,14 +64,14 @@ export default function DocumentUploader({ title }: { title: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
-  const [apiResponse, setApiResponse] = useState<ApiResponseData | null>(null);
+  const [apiResponse, setApiResponse] = useState<any | null>(null);
   const [copiedField, setCopiedField] = useState<string>("");
   const [textData, setTextData] = useState<Record<string, string> | null>(null); // New state for storing data.text
 
   //console.log(title);
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-    console.log(selectedFiles, "selectedFiles");
+   // console.log(selectedFiles, "selectedFiles");
     toast({
       title: "File Limit Exceeded",
       description: "You can only upload a maximum of two files",
@@ -256,7 +250,7 @@ export default function DocumentUploader({ title }: { title: string }) {
           });
 
           const data = await response.json();
-          console.log(data);
+         // console.log(data);
 
           if (response.ok) {
             toast({
@@ -292,7 +286,7 @@ export default function DocumentUploader({ title }: { title: string }) {
 
   const uploadToEndpoint = async (endpoint: string, textData: any) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
-    console.log(baseURL);
+   // console.log(baseURL);
 
     setLoading(true);
     try {
@@ -374,72 +368,72 @@ export default function DocumentUploader({ title }: { title: string }) {
     });
   };
 
-  const renderResponseSection = (
-    data: Record<string, { English: string; Arabic: string } | number>,
-    language: "English" | "Arabic"
-  ) => {
-    //console.log(data, "dddd");
-    if (!data) {
-      return null; // Or any other placeholder content
+  const renderResponseSection = (results: Record<string, any>) => {
+    if (!results) {
+      return <p>No data available</p>;
     }
 
     return (
-      <div className="grid gap-4 md:grid-cols-2">
-        {Object?.entries(data)?.map(([key, value]) => {
-          // Handle the "confidence" key separately
-          if (key === "confidence" && typeof value === "number") {
-            return (
-              <div key={key} className="p-4 bg-muted rounded-lg">
-                <h3 className="font-medium text-sm text-muted-foreground mb-1">
-                  Confidence
-                </h3>
-                <p className="text-lg font-semibold">{value}</p>
-              </div>
-            );
-          }
+      <div className="space-y-8">
+        {Object.entries(results).map(([fileName, data]) => (
+          <div key={fileName} className="p-4 bg-muted rounded-lg">
+            <h3 className="font-medium text-lg mb-4">{fileName}</h3>
 
-          // Handle translation fields
-          if (typeof value === "object" && value !== null) {
-            const text = value[language] || "--";
-            return (
-              <div
-                key={key}
-                className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-sm text-muted-foreground mb-1">
-                      {key.replace(/_/g, " ")}
-                    </h3>
-                    <p
-                      className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap"
-                      dir={language === "Arabic" ? "rtl" : "ltr"}
-                    >
-                      {text}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => copyToClipboard(text, `${key}-${language}`)}
-                    className="h-8 w-8"
-                  >
-                    {copiedField === `${key}-${language}` ? (
-                      <Check className="h-4 w-4" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
+            {/* Verification Details */}
+            {data.verification && (
+              <div className="mb-4">
+                <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                  Verification
+                </h4>
+                <p className="text-lg font-semibold">
+                  Authentic: {data.verification.isAuthentic ? "Yes" : "No"}
+                </p>
+                <p className="text-lg font-semibold">
+                  Confidence Level: {data.verification.confidenceLevel}
+                </p>
+                <p className="text-lg font-semibold">
+                  Reasoning: {data.verification.reasoning}
+                </p>
+                <p className="text-lg font-semibold">
+                  Concerns: {data.verification.concerns.join(", ")}
+                </p>
               </div>
-            );
-          }
+            )}
 
-          return null; // Return null for any unexpected data types
-        })}
+            {/* Extracted Data */}
+            {data.extractedData && (
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                  Extracted Data
+                </h4>
+                {Object.entries(data.extractedData).map(([key, value]) => {
+                  const { english, arabic } = value as {
+                    english: string;
+                    arabic: string;
+                  };
+                  return (
+                    <div key={key} className="mb-2">
+                      <h5 className="font-medium text-sm text-muted-foreground">
+                        {key.replace(/_/g, " ")}
+                      </h5>
+                      <p className="text-lg font-semibold">
+                        English: {english || "--"}
+                      </p>
+                      <p className="text-lg font-semibold">
+                        Arabic: {arabic || "--"}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     );
   };
+
+  // console.log("aiResponse", apiResponse);
 
   return (
     <div className="bg-background p-8 relative">
@@ -609,27 +603,10 @@ export default function DocumentUploader({ title }: { title: string }) {
             )}
           </div>
         </Card>
-        {apiResponse?.gpt_data && (
+        {apiResponse && (
           <Card className="p-6">
             <h2 className="text-2xl font-bold mb-6">Document Data</h2>
-            <Tabs defaultValue="english" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="english">English</TabsTrigger>
-                <TabsTrigger value="arabic">Arabic</TabsTrigger>
-              </TabsList>
-              <TabsContent value="english" className="mt-6">
-                {renderResponseSection(
-                  apiResponse?.gpt_data?.combined,
-                  "English"
-                )}
-              </TabsContent>
-              <TabsContent value="arabic" className="mt-6">
-                {renderResponseSection(
-                  apiResponse?.gpt_data?.combined,
-                  "Arabic"
-                )}
-              </TabsContent>
-            </Tabs>
+            {renderResponseSection(apiResponse.results)}
           </Card>
         )}
       </div>

@@ -9,7 +9,8 @@ const routes = [
   { name: "Car Registration Card", path: "/" },
   { name: "Driving Card", path: "/driving" },
   { name: "Emirates ID", path: "/emirates" },
-  { name: "New Car Detect", path: "/new-car-detect", badge: true }, // Added new route with badge
+  { name: "New Car Detect", path: "/new-car-detect" },
+  { name: "New Car 4.1", path: "/new-car-newllm", badge: true }, // Added new route with badge
 ];
 
 export default function Navbar() {
