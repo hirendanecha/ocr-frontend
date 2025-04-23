@@ -1,9 +1,8 @@
-import { ExtractedData } from "@/app/types";
 import { UICardContainer } from "./ui-card-container";
 import { BilingualDataItem } from "./bilingual-data-item";
 
 interface OwnerSectionProps {
-  data: ExtractedData;
+  data: any;
 }
 
 export function OwnerSection({ data }: OwnerSectionProps) {
