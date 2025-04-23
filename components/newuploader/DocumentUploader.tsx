@@ -27,6 +27,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import LoadingOverlay from "../Loader/LoadingOverlay";
+import { VerificationSection } from "../verification-section";
+import { OwnerSection } from "../owner-section";
+import { VehicleSection } from "../vehicle-section";
 
 type FileWithPreview = {
   file: File;
@@ -71,7 +74,7 @@ export default function DocumentUploader({ title }: { title: string }) {
   //console.log(title);
 
   const validateAndSetFiles = (selectedFiles: File[]) => {
-   // console.log(selectedFiles, "selectedFiles");
+    // console.log(selectedFiles, "selectedFiles");
     toast({
       title: "File Limit Exceeded",
       description: "You can only upload a maximum of two files",
@@ -250,7 +253,7 @@ export default function DocumentUploader({ title }: { title: string }) {
           });
 
           const data = await response.json();
-         // console.log(data);
+          // console.log(data);
 
           if (response.ok) {
             toast({
@@ -286,7 +289,7 @@ export default function DocumentUploader({ title }: { title: string }) {
 
   const uploadToEndpoint = async (endpoint: string, textData: any) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
-   // console.log(baseURL);
+    // console.log(baseURL);
 
     setLoading(true);
     try {
@@ -433,12 +436,12 @@ export default function DocumentUploader({ title }: { title: string }) {
     );
   };
 
-  // console.log("aiResponse", apiResponse);
+  console.log("aiResponse", apiResponse);
 
   return (
     <div className="bg-background p-8 relative">
       <LoadingOverlay isLoading={loading} />
-      <div className="max-w-2xl mx-auto space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8 mb-5">
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Upload {title}</h1>
@@ -603,13 +606,19 @@ export default function DocumentUploader({ title }: { title: string }) {
             )}
           </div>
         </Card>
-        {apiResponse && (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-6">Document Data</h2>
-            {renderResponseSection(apiResponse.results)}
-          </Card>
-        )}
       </div>
+      {apiResponse && (
+        <div className="max-w-7xl mx-auto space-y-8">
+          <VerificationSection
+            verification={apiResponse?.gpt_data?.verification}
+          />
+
+          <div className="flex flex-col">
+            <OwnerSection data={apiResponse?.gpt_data?.extractedData} />
+            <VehicleSection data={apiResponse?.gpt_data?.extractedData} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
