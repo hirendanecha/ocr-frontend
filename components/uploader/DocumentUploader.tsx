@@ -292,34 +292,25 @@ export default function DocumentUploader({ title }: { title: string }) {
 
   const uploadToEndpoint = async (endpoint: string, textData: any) => {
     const baseURL = process.env.NEXT_PUBLIC_SERVER_URL;
-    console.log(baseURL);
-
     setLoading(true);
     try {
-      const formData = new FormData();
-      console.log("i am file:-", files);
-
-      files.forEach((fileObj, index) => {
-        formData.append(`files`, fileObj.file); // Ensure the key matches the expected parameter in FastAPI
-      });
-
       const response = await fetch(`${baseURL}${endpoint}`, {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify(textData), // send as JSON
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         setApiResponse(data);
         toast({
           title: "Scan Successful",
-          description: `Files uploaded to ${endpoint
-            .split("/")
-            .pop()} successfully`,
+          description: `Files uploaded to ${endpoint.split("/").pop()} successfully`,
         });
-        // Clear files after successful upload
-        //setFiles([]);
       } else {
         throw new Error(data.error || "Scan failed");
       }
